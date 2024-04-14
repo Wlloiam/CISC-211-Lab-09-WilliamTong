@@ -74,43 +74,44 @@ asmUnpack:
     
     /*** STUDENTS: Place your asmUnpack code BELOW this line!!! **************/
     push {r4-r11,LR}
-    
-    
-    .equ constant_value1, 0xFFFF0000
+    /**constant value to get MSB 16 and LSB 16**/
+    .equ constant_value1, 0xFFFF0000			    
     .equ constant_value2, 0x0000FFFF
     
-    ldr r5,=constant_value1
+    ldr r5,=constant_value1	/**store constant_value 1 in r5 **/
     
-    mov r6,r0
-    ANDS r6,r6,r5
-    LSR r6,16
-    BMI negative_multiplicand
-    str r6,[r1]
-    B case_for_multiplier
+    mov r6,r0			/**storing input r0 in r6**/
+    ANDS r6,r6,r5		/**using AND operation, r6 and r5, to get MSB 16 bits, and store it in r6, and update the flags**/
+    LSR r6,16			/**shifting r6 16 places right**/
+    BMI negative_multiplicand	/**if the negative flag is set, it will direct to the negative_multiplicand branch**/
+    str r6,[r1]			/**storing MSB 16 bits in the memory location specified by r1**/
+    B case_for_multiplier	/**this will direct to case_for_multiplier branch which is for the LSB 16 Bits**/
     
+    /**This branch is for negative multiplicand. IF the MSB 16bits is negative, this branch will perform**/
     negative_multiplicand:
-	ORR r6,r6,r5
-	str r6,[r1]
+	ORR r6,r6,r5		/**Using Or operator, r6 or r5, to get the signed negative value of the multiplicand**/
+	str r6,[r1]		/**storing r6 in the memory location specified by r1**/
 	
+    /**This branch is for multiplier.**/
     case_for_multiplier:
-	ldr r5,=constant_value2
-	mov r6,r0
-	AND r6,r6,r5
-	LSL r6,16
-	ADDS r6,r6,0
-	BMI negative_multiplier
-	LSR r6,16
-	str r6,[r2]
-	B done_for_asmUnpack
-	
+	ldr r5,=constant_value2	/**storing constant_value2 in the r5**/
+	mov r6,r0		/**storing input r0 in the r6**/
+	AND r6,r6,r5		/**Using And Operation, r6 AND r5, to get the LSB 16bits, and store it in r6**/
+	LSL r6,16		/**shifting r6 16 bits left**/
+	ADDS r6,r6,0		/**add r6 to 0 and store it in r6, then update the flags**/
+	BMI negative_multiplier	/**If the negative flag is set, it will direct to the negative_multiplier branch**/
+	/**If the negative flag is not set, store it in memory location specified by r2**/
+	LSR r6,16		/**shifting r6 16 bits right**/
+	str r6,[r2]		/**store the r6 values in memory location specified by r2**/
+	B done_for_asmUnpack	/**direct to the done_for_asmUnpack**/
+    /**This branch is for negative multiplier**/
     negative_multiplier:
-	ldr r5,=constant_value1
-	LSR r6,16
-	ORR r6,r6,r5
-	str r6,[r2]
+	ldr r5,=constant_value1	/**sotre the constan_value1 in the r5**/
+	LSR r6,16		/**shfiting r6 right 16 bits**/
+	ORR r6,r6,r5		/**using OR operation, r6 OR r5, to get the negative signed value for the multiplier**/
+	str r6,[r2]		/**store the r6 value in the memory location specified by the r2**/
 	
-    done_for_asmUnpack:
-    
+    done_for_asmUnpack:		/**This is the end of the function asmUnpack**/
     
     pop {r4-r11,LR}
 
@@ -139,25 +140,25 @@ asmAbs:
     /*** STUDENTS: Place your asmAbs code BELOW this line!!! **************/
     push {r4-r11,LR}
     
-    mov r6,r0
-    adds r6,r6,0
-    BMI negative_case
-    
-    str r6,[r1]
-    mov r7,0
-    str r7,[r2]
-    mov r0,r6
-    b done_for_asmAbs
-    
+    mov r6,r0		/**storing r0, which contains signed value, in r6**/
+    adds r6,r6,0	/**add r6 to 0 and store it in r6, then update the flags**/
+    BMI negative_case	/**If the negative flag is set, direct to the negative_case branch**/
+    /**If the negative flag is not set, store the value in memory location specified by r1, and store 0 in memory location specified by r2 **/
+    str r6,[r1]		/**store the r6 value in the memory location specified by r1**/
+    mov r7,0		/**store 0 in r7**/
+    str r7,[r2]		/**store r7 in memory location specified by r2**/
+    mov r0,r6		/**store r6, the absolut value of the input,  in the r0**/
+    b done_for_asmAbs	/**direct to the done_for_asmAbs branch**/
+    /**This is for the time when the input value is negative**/
     negative_case:
-    mvn r6,r6
-    mov r7,1
-    add r6,r6,r7
-    str r6,[r1]
-    str r7,[r2]
-    mov r0,r6
+    mvn r6,r6		/**flip the btis in r6, and store it in r6**/
+    mov r7,1		/**store 1 in r7**/
+    add r6,r6,r7	/**add r6 to r7 and store it in the r6, This is 2'complement method to get the absolut value of the input**/
+    str r6,[r1]		/**store r6, absoult value of the input, in the memory location specified by r1**/
+    str r7,[r2]		/**store r7, which conatins 1, in the memory location specified by r2**/
+    mov r0,r6		/**storing r6, absolute value of the input, in r0 as a initial product**/
     
-    done_for_asmAbs:
+    done_for_asmAbs:	/**This is the end of the done_for_asmAbs function**/
 	
     pop {r4-r11,LR}
 
@@ -179,22 +180,22 @@ asmMult:
     /*** STUDENTS: Place your asmMult code BELOW this line!!! **************/
     push {r4-r11,LR}
     
-    mov r7,0
-    mov r5,r0
-    mov r6,r1
-    
+    mov r7,0		/**storing 0 in the r7**/
+    mov r5,r0		/**storing input r0,abs value of multiplicand, in the r5**/ 
+    mov r6,r1		/**storing input r1, abs value of multiplier, in the r6**/
+    /**This is the iterate branch, it will perform multiplication function by doing shifting and adding method. This method will perform until
+    the multiplier is equal to 0**/
     iterate:
-    cmp r6,0
-    beq done_for_asmMult
-    tst r6,1
-    addne r7,r7,r5
-    lsl r5,r5,1
-    lsr r6,r6,1
-    b iterate
+    cmp r6,0		/**comparing r6 with 0, to know the multiplier is 0**/
+    beq done_for_asmMult/**If the multiplier is equal to 0, it will direct to the done_for_asmMult branch**/
+    tst r6,1		/**using TST instruction to  check r6 whether the least significant bit (LSB) of R6 is 0 or 1**/ 
+    addne r7,r7,r5	/**If the LSB of r6 is 1, add the r7 to r5 and sotre it in r5. IF not this step will not perform**/
+    lsl r5,r5,1		/**shifting r5 left 1 bit and store it in r5**/
+    lsr r6,r6,1		/**shifting r6 right 1 bit and store it in r6**/
+    b iterate		/**back to the start of the iterate brach**/
    
-    done_for_asmMult:
-    mov r0,r7
-    
+    done_for_asmMult:	/**This branch will store the result of the multiplication of multiplier and multiplicand in r0**/
+    mov r0,r7		/**store the multiplication result r7 in the r0**/
     
     pop {r4-r11,LR}
 
@@ -222,32 +223,33 @@ asmFixSign:
     /*** STUDENTS: Place your asmFixSign code BELOW this line!!! **************/
     push {r4-r11,LR}
     
-    mov r4,r0
-    mov r5,r1
-    mov r6,r2
+    mov r4,r0			/**Storing the input r0, the intial product, in r4**/
+    mov r5,r1			/**Storing the input r1, the sign bit of the multiplicand, in r5**/
+    mov r6,r2			/**Storing the input r2, the sign bit of the mulitiplier in r6**/
     
-    cmp r5,0
-    beq check_b_sign_a_positive
-    b check_b_sign_a_negative
+    cmp r5,0			/**compare r5 with 0 to know the multiplicand is positive(0) or negative(1)**/
+    beq check_b_sign_a_positive	/**If the r5 equals to 0, the sign of the multiplicand is positive, so will direct to check_b_sign_a_positive branch**/
+    b check_b_sign_a_negative	/**If the r5 does not equal to 0, the sign of the multiplicand is negative, so direct to the check_b_sign_a_negative branch**/
     
+    /** This branch is to check the sign of the multiplier when the multiplicand is positive.**/
     check_b_sign_a_positive:
-	cmp r6,0
-	bne product_is_negative
-	b  done_for_asmFixSign
-	
+	cmp r6,0		/**compare r6 with 0 to know the multiplier is positive(0) or negative(1)**/
+	bne product_is_negative	/**If r6 does not equals to 0, the prodcut will be negative, and direct to the product_is_negative branch**/
+	b  done_for_asmFixSign	/**If r6 equals to 0, the product is positve, and direct to the done_for_asmFixSign**/
+    /**This branch is to check the sign of the mulitplier when the multiplican is negative**/
     check_b_sign_a_negative:
-	cmp r6,1
-	beq done_for_asmFixSign
-	b product_is_negative
-	
+	cmp r6,1		/**compare r6 with 1 to know the multiplier is positve(0) or negative(1)**/
+	beq done_for_asmFixSign	/**If the r6 equals to 0, the product is positive, direct to the done_for_asmFixSign branch**/
+	b product_is_negative	/**If the r6 does not equal to 0, the product is negative, direct to the product_is_negative branch**/
+    /**This branch is for when the product is negative**/
     product_is_negative:
-	mvn r4,r4
-	add r4,r4,1
-	mov r0,r4
-	b done_for_asmFixSign
+	mvn r4,r4		/**flip the btis of r4, which contains inital product, and store it in r4**/
+	add r4,r4,1		/**add r4 to 1, and store it in r4, doing 2's complement method to get the negative value of the inital product**/
+	mov r0,r4		/**store the r4, negative value of the inital product, in r0**/
+	b done_for_asmFixSign   /**direct to the done_for_asmFixSign branch**/
 	
+    /**If the product is positive,we dont need to do anything changes in r0**/
     done_for_asmFixSign:
-	
     
     pop {r4-r11,LR}
 
