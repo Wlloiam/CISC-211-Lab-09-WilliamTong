@@ -53,6 +53,7 @@ final_Product:   .word     0
 .type asmFixSign,%function
 .type asmMain,%function
 
+ 
 /* function: asmUnpack
  *    inputs:   r0: contains the packed value. 
  *                  MSB 16bits is signed multiplicand (a)
@@ -68,10 +69,52 @@ final_Product:   .word     0
  *                  2) store unpacked B value in location
  *                     specified by r2
  */
+    
 asmUnpack:   
     
     /*** STUDENTS: Place your asmUnpack code BELOW this line!!! **************/
+    push {r4-r11,LR}
+    
+    
+    .equ constant_value1, 0xFFFF0000
+    .equ constant_value2, 0x0000FFFF
+    
+    ldr r5,=constant_value1
+    
+    mov r6,r0
+    ANDS r6,r6,r5
+    LSR r6,16
+    BMI negative_multiplicand
+    str r6,[r1]
+    B case_for_multiplier
+    
+    negative_multiplicand:
+	ORR r6,r6,r5
+	str r6,[r1]
+	
+    case_for_multiplier:
+	ldr r5,=constant_value2
+	mov r6,r0
+	AND r6,r6,r5
+	LSL r6,16
+	ADDS r6,r6,0
+	BMI negative_multiplier
+	LSR r6,16
+	str r6,[r2]
+	B done_for_asmUnpack
+	
+    negative_multiplier:
+	ldr r5,=constant_value1
+	LSR r6,16
+	ORR r6,r6,r5
+	str r6,[r2]
+	
+    done_for_asmUnpack:
+    
+    
+    pop {r4-r11,LR}
 
+    mov pc, lr
     
     /*** STUDENTS: Place your asmUnpack code ABOVE this line!!! **************/
 
@@ -94,14 +137,38 @@ asmUnpack:
  */
 asmAbs:  
     /*** STUDENTS: Place your asmAbs code BELOW this line!!! **************/
+    push {r4-r11,LR}
     
+    mov r6,r0
+    adds r6,r6,0
+    BMI negative_case
+    
+    str r6,[r1]
+    mov r7,0
+    str r7,[r2]
+    mov r0,r6
+    b done_for_asmAbs
+    
+    negative_case:
+    mvn r6,r6
+    mov r7,1
+    add r6,r6,r7
+    str r6,[r1]
+    str r7,[r2]
+    mov r0,r6
+    
+    done_for_asmAbs:
+	
+    pop {r4-r11,LR}
 
+    mov pc, lr
     /*** STUDENTS: Place your asmAbs code ABOVE this line!!! **************/
 
 
     /***************  END ---- asmAbs  ************/
 
- 
+  
+  
 /* function: asmMult
  *    inputs:   r0: contains abs value of multiplicand (a)
  *              r1: contains abs value of multiplier (b)
@@ -110,7 +177,29 @@ asmAbs:
 asmMult:   
 
     /*** STUDENTS: Place your asmMult code BELOW this line!!! **************/
+    push {r4-r11,LR}
+    
+    mov r7,0
+    mov r5,r0
+    mov r6,r1
+    
+    iterate:
+    cmp r6,0
+    beq done_for_asmMult
+    tst r6,1
+    addne r7,r7,r5
+    lsl r5,r5,1
+    lsr r6,r6,1
+    b iterate
+   
+    done_for_asmMult:
+    mov r0,r7
+    
+    
+    pop {r4-r11,LR}
 
+    mov pc, lr
+    
 
     /*** STUDENTS: Place your asmMult code ABOVE this line!!! **************/
    
@@ -131,7 +220,38 @@ asmMult:
 asmFixSign:   
     
     /*** STUDENTS: Place your asmFixSign code BELOW this line!!! **************/
+    push {r4-r11,LR}
+    
+    mov r4,r0
+    mov r5,r1
+    mov r6,r2
+    
+    cmp r5,0
+    beq check_b_sign_a_positive
+    b check_b_sign_a_negative
+    
+    check_b_sign_a_positive:
+	cmp r6,0
+	bne product_is_negative
+	b  done_for_asmFixSign
+	
+    check_b_sign_a_negative:
+	cmp r6,1
+	beq done_for_asmFixSign
+	b product_is_negative
+	
+    product_is_negative:
+	mvn r4,r4
+	add r4,r4,1
+	mov r0,r4
+	b done_for_asmFixSign
+	
+    done_for_asmFixSign:
+	
+    
+    pop {r4-r11,LR}
 
+    mov pc, lr
     
     /*** STUDENTS: Place your asmFixSign code ABOVE this line!!! **************/
 
@@ -156,26 +276,40 @@ asmFixSign:
 asmMain:   
     
     /*** STUDENTS: Place your asmMain code BELOW this line!!! **************/
+    push {r4-r11,LR}
     
     /* Step 1:
      * call asmUnpack. Have it store the output values in 
      * a_Multiplicand and b_Multiplier.
-     */
-
-
+     */   
+    ldr r1, =a_Multiplicand
+    ldr r2, =b_Multiplier
+    BL asmUnpack
     /* Step 2a:
      * call asmAbs for the multiplicand (A). Have it store the
      * absolute value in a_Abs, and the sign in a_Sign.
      */
-
-
-
+    /* Load the address of a_Multiplicand */
+    
+    ldr r1, =a_Abs          
+    ldr r2, =a_Sign
+    ldr r4,=a_Multiplicand
+    ldr r0,[r4]
+    BL asmAbs              
+    
     /* Step 2b:
      * call asmAbs for the multiplier (B). Have it store the
      * absolute value in b_Abs, and the sign in b_Sign.
      */
-
-
+    /* Load the address of b_Multiplier */
+    
+    ldr r1, =b_Abs        
+    ldr r2, =b_Sign
+    ldr r4,=b_Multiplier
+    ldr r0,[r4]
+    BL asmAbs      
+    
+    
     /* Step 3:
      * call asmMult. Pass a_Abs as the multiplicand, 
      * and b_Abs as the multiplier.
@@ -183,8 +317,15 @@ asmMain:
      * Store the value returned in r0 to mem location 
      * init_Product.
      */
-
-
+   
+   ldr r4,=a_Abs
+   ldr r0,[r4]
+   ldr r5,=b_Abs
+   ldr r1,[r5]
+   BL asmMult
+   ldr r4,= init_Product
+   str r0,[r4]
+    
 
     /* Step 4:
      * call asmFixSign. Pass in the initial product, and the
@@ -194,8 +335,15 @@ asmMain:
      * Store the value returned in r0 to mem location 
      * final_Product.
      */
-
-
+    ldr r4,=init_Product
+    ldr r0,[r4]
+    ldr r5,=a_Sign
+    ldr r1,[r5]
+    ldr r6,=b_Sign
+    ldr r2,[r6]
+    BL asmFixSign
+    ldr r4,=final_Product
+    str r0,[r4]
 
     /* Step 5:
      * END! Return to caller. Make sure of the following:
@@ -203,16 +351,12 @@ asmMain:
      * 2) the final answer is stored in r0, so that the C call
      *    can access it.
      */
-
-
-
     
     /*** STUDENTS: Place your asmMain code ABOVE this line!!! **************/
-
+    pop  {r4-r11,LR}
+    mov PC,LR
 
     /***************  END ---- asmMain  ************/
-
- 
     
     
 .end   /* the assembler will ignore anything after this line. */
