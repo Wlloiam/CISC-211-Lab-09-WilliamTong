@@ -73,12 +73,13 @@ final_Product:   .word     0
 asmUnpack:   
     
     /*** STUDENTS: Place your asmUnpack code BELOW this line!!! **************/
+    /* save the caller's registers, as required by the ARM calling convention */
     push {r4-r11,LR}
     /**constant value to get MSB 16 and LSB 16**/
     .equ constant_value1, 0xFFFF0000			    
     .equ constant_value2, 0x0000FFFF
     
-    ldr r5,=constant_value1	/**store constant_value 1 in r5 **/
+    ldr r5,=constant_value1	/**store constant_value1 in r5 **/
     
     mov r6,r0			/**storing input r0 in r6**/
     ANDS r6,r6,r5		/**using AND operation, r6 and r5, to get MSB 16 bits, and store it in r6, and update the flags**/
@@ -112,10 +113,8 @@ asmUnpack:
 	str r6,[r2]		/**store the r6 value in the memory location specified by the r2**/
 	
     done_for_asmUnpack:		/**This is the end of the function asmUnpack**/
-    
     pop {r4-r11,LR}
-
-    mov pc, lr
+    mov pc, lr			/* asmUnpack return to caller */
     
     /*** STUDENTS: Place your asmUnpack code ABOVE this line!!! **************/
 
@@ -138,6 +137,7 @@ asmUnpack:
  */
 asmAbs:  
     /*** STUDENTS: Place your asmAbs code BELOW this line!!! **************/
+    /* save the caller's registers, as required by the ARM calling convention */
     push {r4-r11,LR}
     
     mov r6,r0		/**storing r0, which contains signed value, in r6**/
@@ -159,10 +159,8 @@ asmAbs:
     mov r0,r6		/**storing r6, absolute value of the input, in r0 as a initial product**/
     
     done_for_asmAbs:	/**This is the end of the done_for_asmAbs function**/
-	
     pop {r4-r11,LR}
-
-    mov pc, lr
+    mov pc, lr		/* asmAbs return to caller */
     /*** STUDENTS: Place your asmAbs code ABOVE this line!!! **************/
 
 
@@ -176,11 +174,11 @@ asmAbs:
  *    outputs:  r0: initial product: r0 * r1
  */    
 asmMult:   
-
     /*** STUDENTS: Place your asmMult code BELOW this line!!! **************/
+    /* save the caller's registers, as required by the ARM calling convention */
     push {r4-r11,LR}
     
-    mov r7,0		/**storing 0 in the r7**/
+    mov r7,0		/**storing 0 in the r7 and this is to store the prouct temp**/
     mov r5,r0		/**storing input r0,abs value of multiplicand, in the r5**/ 
     mov r6,r1		/**storing input r1, abs value of multiplier, in the r6**/
     /**This is the iterate branch, it will perform multiplication function by doing shifting and adding method. This method will perform until
@@ -196,10 +194,8 @@ asmMult:
    
     done_for_asmMult:	/**This branch will store the result of the multiplication of multiplier and multiplicand in r0**/
     mov r0,r7		/**store the multiplication result r7 in the r0**/
-    
     pop {r4-r11,LR}
-
-    mov pc, lr
+    mov pc, lr		/* asmMult return to caller */
     
 
     /*** STUDENTS: Place your asmMult code ABOVE this line!!! **************/
@@ -221,11 +217,12 @@ asmMult:
 asmFixSign:   
     
     /*** STUDENTS: Place your asmFixSign code BELOW this line!!! **************/
+    /* save the caller's registers, as required by the ARM calling convention */
     push {r4-r11,LR}
     
     mov r4,r0			/**Storing the input r0, the intial product, in r4**/
     mov r5,r1			/**Storing the input r1, the sign bit of the multiplicand, in r5**/
-    mov r6,r2			/**Storing the input r2, the sign bit of the mulitiplier in r6**/
+    mov r6,r2			/**Storing the input r2, the sign bit of the mulitiplier, in r6**/
     
     cmp r5,0			/**compare r5 with 0 to know the multiplicand is positive(0) or negative(1)**/
     beq check_b_sign_a_positive	/**If the r5 equals to 0, the sign of the multiplicand is positive, so will direct to check_b_sign_a_positive branch**/
@@ -250,10 +247,8 @@ asmFixSign:
 	
     /**If the product is positive,we dont need to do anything changes in r0**/
     done_for_asmFixSign:
-    
     pop {r4-r11,LR}
-
-    mov pc, lr
+    mov pc, lr			/* asmFixSign return to caller */
     
     /*** STUDENTS: Place your asmFixSign code ABOVE this line!!! **************/
 
@@ -278,26 +273,27 @@ asmFixSign:
 asmMain:   
     
     /*** STUDENTS: Place your asmMain code BELOW this line!!! **************/
+    /* save the caller's registers, as required by the ARM calling convention */
     push {r4-r11,LR}
     
     /* Step 1:
      * call asmUnpack. Have it store the output values in 
      * a_Multiplicand and b_Multiplier.
      */   
-    ldr r1, =a_Multiplicand
-    ldr r2, =b_Multiplier
-    BL asmUnpack
+    ldr r1, =a_Multiplicand	    /*store the address of the multiplicand in r1*/
+    ldr r2, =b_Multiplier	    /*store the address of the mulitiplier in r2*/
+    BL asmUnpack		    /* Call the asmUnpack function */
     /* Step 2a:
      * call asmAbs for the multiplicand (A). Have it store the
      * absolute value in a_Abs, and the sign in a_Sign.
      */
     /* Load the address of a_Multiplicand */
     
-    ldr r1, =a_Abs          
-    ldr r2, =a_Sign
-    ldr r4,=a_Multiplicand
-    ldr r0,[r4]
-    BL asmAbs              
+    ldr r1, =a_Abs		    /*store the address of a_Abs in r1 */
+    ldr r2, =a_Sign		    /*store the address of a_Sign in r2*/
+    ldr r4,=a_Multiplicand	    /*store the address of a_Multiplicand in r4*/
+    ldr r0,[r4]			    /*store the value of a_Multiplicand in r0*/
+    BL asmAbs			    /* call the asmAbs function */
     
     /* Step 2b:
      * call asmAbs for the multiplier (B). Have it store the
@@ -305,11 +301,11 @@ asmMain:
      */
     /* Load the address of b_Multiplier */
     
-    ldr r1, =b_Abs        
-    ldr r2, =b_Sign
-    ldr r4,=b_Multiplier
-    ldr r0,[r4]
-    BL asmAbs      
+    ldr r1, =b_Abs		    /*store the address of b_Abs in r1*/
+    ldr r2, =b_Sign		    /*store the address of b_Sign in r2*/
+    ldr r4,=b_Multiplier	    /*store the address of b_Multiplier in r4*/
+    ldr r0,[r4]			    /*store the value of b_Multiplier in r0*/
+    BL asmAbs			    /* call the asmAbs function*/
     
     
     /* Step 3:
@@ -320,13 +316,13 @@ asmMain:
      * init_Product.
      */
    
-   ldr r4,=a_Abs
-   ldr r0,[r4]
-   ldr r5,=b_Abs
-   ldr r1,[r5]
-   BL asmMult
-   ldr r4,= init_Product
-   str r0,[r4]
+   ldr r4,=a_Abs		    /*store the address of a_Abs in r4*/
+   ldr r0,[r4]			    /*store the value of a_Abs in r0*/
+   ldr r5,=b_Abs		    /*store the address of b_Abs in r5*/
+   ldr r1,[r5]			    /*store the value of b_Abs in r1*/
+   BL asmMult			    /*call the asmMult function*/
+   ldr r4,= init_Product	    /*store the address of init_Product in r4*/
+   str r0,[r4]			    /* store the value of init_Product in r0*/
     
 
     /* Step 4:
@@ -337,15 +333,15 @@ asmMain:
      * Store the value returned in r0 to mem location 
      * final_Product.
      */
-    ldr r4,=init_Product
-    ldr r0,[r4]
-    ldr r5,=a_Sign
-    ldr r1,[r5]
-    ldr r6,=b_Sign
-    ldr r2,[r6]
-    BL asmFixSign
-    ldr r4,=final_Product
-    str r0,[r4]
+    ldr r4,=init_Product	    /* store the address of init_Product in r4*/
+    ldr r0,[r4]			    /* store the value of init_Product in r0*/
+    ldr r5,=a_Sign		    /* store the address of a_Sign in r5 */
+    ldr r1,[r5]			    /* store the value of a_Sign in r1 */
+    ldr r6,=b_Sign		    /* store the address of b_Sign in r6*/
+    ldr r2,[r6]			    /* store the value of b_Sign in r2 */
+    BL asmFixSign		    /* call the asmFixSign function */
+    ldr r4,=final_Product	    /* store the address of final_Product in r4*/
+    str r0,[r4]			    /*store the value of final_Product in r0*/
 
     /* Step 5:
      * END! Return to caller. Make sure of the following:
@@ -353,10 +349,11 @@ asmMain:
      * 2) the final answer is stored in r0, so that the C call
      *    can access it.
      */
+    pop  {r4-r11,LR}
+    mov PC,LR			/* asmMain return to caller */
     
     /*** STUDENTS: Place your asmMain code ABOVE this line!!! **************/
-    pop  {r4-r11,LR}
-    mov PC,LR
+    
 
     /***************  END ---- asmMain  ************/
     
